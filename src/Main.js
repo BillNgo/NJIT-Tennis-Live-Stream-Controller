@@ -60,9 +60,9 @@ class Main extends Component {
     this.state = {
       isAuth : null,
       courtID : 1,
-      court : {isLive:false,isDoubles:false,currentSet:1,setCount:3},
-      team1 : {name:'',setScores:[0,0,0,0,0,0]},
-      team2 : {name:'',setScores:[0,0,0,0,0,0]},
+      court : {isLive:false,isDoubles:false,currentSet:1,setCount:3,isSuperBreaker:true},
+      team1 : {name:'',logo:'',setScores:[0,0,0,0,0,0]},
+      team2 : {name:'',logo:'',setScores:[0,0,0,0,0,0]},
       player1 : {name:''},
       player2 : {name:''},
       player3 : {name:''},
@@ -126,6 +126,8 @@ class Main extends Component {
             <Controller 
               team1={this.state.team1}
               team2={this.state.team2}
+              player1={this.state.player1}
+              player2={this.state.player3}
               court={this.state.court}
               isGameOver={this.isGameOver}
               resetGame={this.resetGame}
@@ -151,9 +153,10 @@ class Main extends Component {
               isLive={this.state.court.isLive}
               updateCourtID={this.updateCourtID}  
               updateIsDoubles={this.updateIsDoubles}
-              updateTeamName={this.updateTeamName}
+              updateTeam={this.updateTeam}
               updateSetCount={this.updateSetCount}
               updatePlayerName={this.updatePlayerName}
+              updateIsSuperBreaker={this.updateIsSuperBreaker}
               updateDatabase={this.updateDatabase}
               updateLiveStreamStatus={this.updateLiveStreamStatus}
             />
@@ -265,7 +268,7 @@ class Main extends Component {
     }
   }
 
-  updateTeamName = (e,n) => {
+  updateTeam = (e,n) => {
     e.persist()
     const court = db.collection('courts').doc('court'+this.state.courtID);
     const team1 = court.collection('teams').doc('team1');
@@ -273,19 +276,20 @@ class Main extends Component {
     switch(n){
       case 1:
       team1.update({
-        name: e.target.value
+        name: e.target[e.target.selectedIndex].text,
+        logo: e.target.value
       })
       break;
       case 2:
       team2.update({
-        name: e.target.value
+        name: e.target[e.target.selectedIndex].text,
+        logo: e.target.value
       })
       break;
       default:
       break;
     }
   }
-
   
   updateCourtID = n => {
     this.setState({
@@ -304,7 +308,14 @@ class Main extends Component {
   updateIsDoubles = val => {
     const court = db.collection('courts').doc('court'+this.state.courtID);
     court.update({
-      isDoubles : val
+      isDoubles : this.convertBoolean(val)
+    })
+  }
+
+  updateIsSuperBreaker = val => {
+    const court = db.collection('courts').doc('court'+this.state.courtID);
+    court.update({
+      isSuperBreaker : this.convertBoolean(val)
     })
   }
 
@@ -355,9 +366,9 @@ class Main extends Component {
       let T1setScore = this.state['team'+teamNum].setScores[i];
       let T2setScore = this.state['team'+(3-teamNum)].setScores[i];
       
-      if(i === setCount && T1setScore >= 10 && T1setScore - T2setScore >= 2){
+      if(i === setCount && this.state.court.isSuperBreaker && T1setScore >= 10 && T1setScore - T2setScore >= 2){
         points++
-      }else if(i !== setCount && ((T1setScore === 6 && T1setScore - T2setScore >= 2) || T1setScore === 7)){
+      }else if(!(this.state.court.isSuperBreaker && i === setCount) && ((T1setScore === 6 && T1setScore - T2setScore >= 2) || T1setScore === 7)){
         points++
       }
     }
@@ -385,8 +396,8 @@ class Main extends Component {
       if(doc.exists){
         otherScore = doc.data().setScores[set];
         if(this.isGameOver()) return;
-        if(set === this.state.court.setCount && score > 10 && Math.abs(score - otherScore) > 2 && score > otherScore) return;
-        if(set !== this.state.court.setCount && score > 6 && otherScore < 5) return;
+        if(set === this.state.court.setCount && this.state.court.isSuperBreaker && score > 10 && Math.abs(score - otherScore) > 2 && score > otherScore) return;
+        if(!this.state.court.isSuperBreaker && score > 6 && otherScore < 5) return;
         var teamObj = this.state[team];
         teamObj.setScores[set] = score;
         this.setState({

@@ -28,7 +28,7 @@ class Controller extends Component {
 
     if(this.props.isGameOver() || currentSet > setCount) return;
 
-    if(setCount === currentSet){
+    if(setCount === currentSet && this.props.court.isSuperBreaker){
 
       // THIRD SET TIE BREAKER SCORING
       // logic handled in updateSetScore in Main.js
@@ -125,7 +125,7 @@ class Controller extends Component {
           {this.generateScoreTitle()}
 
           <div className="col-6">
-            <div>{this.props.team1.name}</div>
+            <div>{this.props.team1.name.toUpperCase() === "NONE" ? this.props.player1.name : this.props.team1.name }</div>
             <div style={scoreStyle}>{this.props.team1.score}</div>
             <button className="col btn btn-lg btn-secondary" onClick={() => this.updateScore()} style={{height:60}}>
               <i className="fas fa-plus"></i>
@@ -136,7 +136,7 @@ class Controller extends Component {
           </div>   
 
           <div className="col-6">
-            <div>{this.props.team2.name}</div>
+            <div>{this.props.team2.name.toUpperCase() === "NONE" ? this.props.player2.name : this.props.team2.name }</div>
             <div style={scoreStyle}>{this.props.team2.score}</div>
             <button className="col btn btn-lg btn-secondary" onClick={() => this.updateScore(false)} style={{height:60}}>
               <i className="fas fa-plus"></i>
@@ -147,14 +147,16 @@ class Controller extends Component {
           </div>
         </div>
 
+
         <div className="text-right">
           <a style={{color:'grey',textDecoration:'underline',cursor:'pointer'}}
-              onClick={() => this.setState({ 'settingsOpen' : !this.state.settingsOpen })}>advanced settings</a>
+              onClick={() => this.setState({ 'settingsOpen' : !this.state.settingsOpen })}>Click here for advanced settings</a>
         </div>
         
         <div className={"mt-3 "+(this.state.settingsOpen ? "d-block" : "d-none")}>
-          <button className="col btn btn-lg btn-danger" onClick={this.resetGame}>Reset Game</button>
         </div>
+
+        <button className="col btn btn-lg btn-dark text-danger my-3" onClick={this.resetGame}>Reset Game Scores</button>
 
       </div>
     )
@@ -214,7 +216,6 @@ class Controller extends Component {
 
     const teamStyle = {
       textAlign:'left',
-      width:20,
       height:20,      
       fontSize:16,
       lineHeight:0,
@@ -230,14 +231,14 @@ class Controller extends Component {
       for(let i = 0; i <= Math.min(currentSet, setCount); i++){
         if(i === 0){
           children.push(<td key={i} style={teamStyle}>
-            <span style={team === 1 ? {color:'#4285F4'} : {color:'#ff4444'}}>{this.props['team'+team].name}</span></td>);
+            <span style={team === 1 ? {color:'#4285F4'} : {color:'#ff4444'}}>{ this.props['team'+team].name.toUpperCase() === "NONE" ? this.props["player"+team].name : this.props['team'+team].name }</span></td>);
           continue;
         }
         let score1 = this.props['team'+team].setScores[i];        
         let score2 = this.props['team'+(3-team)].setScores[i];
         children.push(<td key={i} style={tdStyle}>
-          <span style={ (i >= setCount && score1 >= 10 && score1 - score2 >= 2) ||
-                        ((i < setCount && score1 >= 6 && score1 - score2 >= 2) || score1 === 7) ? 
+          <span style={ (i >= setCount && this.props.court.isSuperBreaker && score1 >= 10 && score1 - score2 >= 2) ||
+                        ((!(this.props.court.isSuperBreaker && i === setCount) && score1 >= 6 && score1 - score2 >= 2) || score1 === 7) ? 
                         team === 1 ? {color:'#4285F4'} : {color:'#ff4444' } 
                       : {color:'lightgrey'}} >{score1}</span></td>)
       }

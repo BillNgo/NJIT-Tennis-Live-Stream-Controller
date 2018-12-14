@@ -39,3 +39,11 @@ body {
   color: white;
   border-bottom-color: white;
 }
+
+option {
+  color: black;
+}
+
+select, option {
+  cursor: pointer;
+}
