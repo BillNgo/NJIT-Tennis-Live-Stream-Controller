@@ -3,6 +3,7 @@ import Home from './Home';
 import firebase from './firebase';
 import Settings from './Settings';
 import Controller from './Controller';
+import FTPDaemon from './FTPDaemon';
 import './Main.css';
 
 const db = firebase.firestore();
@@ -13,7 +14,6 @@ const GOOGLE = new firebase.auth.GoogleAuthProvider();
 
 
 class Navbar extends Component {
-
   generateLiveStreamStatus = () => {
     if(this.props.isLive){
       return(
@@ -57,6 +57,9 @@ class Navbar extends Component {
 class Main extends Component {
   constructor(props){
     super(props);
+
+    this.ftpDaemon = new FTPDaemon();
+
     this.state = {
       isAuth : null,
       courtID : 1,
@@ -111,6 +114,10 @@ class Main extends Component {
         </div>
       )
     }
+
+    // Notify the FTP daemon that our state updated
+    this.ftpDaemon.notifyCourtUpdate();
+
     switch(this.state.currentTab){
       case "HOME": default:
         return (
